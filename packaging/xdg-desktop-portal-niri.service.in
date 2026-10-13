@@ -1,0 +1,11 @@
+[Unit]
+Description=Portal service (niri ScreenCast implementation)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.impl.portal.desktop.niri
+ExecStart=@BINDIR@/xdg-desktop-portal-niri
+Restart=on-failure

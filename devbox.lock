@@ -1,0 +1,58 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-09-21T03:12:12Z",
+      "resolved": "github:NixOS/nixpkgs/35e212742ceab4ae1dcfbfd9039a39215c816e8e?lastModified=1789960332"
+    },
+    "rustup@latest": {
+      "last_modified": "2026-08-27T07:16:00Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#rustup",
+      "source": "devbox-search",
+      "version": "1.29.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1x8jzaxfv0bak76xkr5li258cal51n99-rustup-1.29.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1x8jzaxfv0bak76xkr5li258cal51n99-rustup-1.29.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/iwq43bwclkay14x5x5bfj955ffphaqff-rustup-1.29.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/iwq43bwclkay14x5x5bfj955ffphaqff-rustup-1.29.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/lvm2155pfw1b3a9g8cij5g7vx2dk4v9f-rustup-1.29.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/lvm2155pfw1b3a9g8cij5g7vx2dk4v9f-rustup-1.29.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cdgc1rh9s22n5i5cgr96vda0pjx1xg3x-rustup-1.29.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/cdgc1rh9s22n5i5cgr96vda0pjx1xg3x-rustup-1.29.0"
+        }
+      }
+    }
+  }
+}
