@@ -11,7 +11,7 @@ use zbus::object_server::SignalEmitter;
 use zbus::zvariant::{DeserializeDict, OwnedObjectPath, OwnedValue, SerializeDict, Type};
 use zbus::{Connection, ObjectServer, fdo, interface};
 
-use crate::chooser::{self, SourceTypes};
+use crate::chooser;
 use crate::mutter::{self, Cast, Target};
 
 #[derive(DeserializeDict, Type, Debug, Default)]
@@ -107,12 +107,13 @@ impl ScreenCastPortal {
         &self,
         _handle: OwnedObjectPath,
         session_handle: OwnedObjectPath,
-        _app_id: String,
+        app_id: String,
         options: SelectSourcesOptions,
     ) -> fdo::Result<(u32, HashMap<String, OwnedValue>)> {
-        let source_types = SourceTypes::from_mask(options.types.unwrap_or(SOURCE_TYPE_MONITOR));
+        let requested_types = options.types.unwrap_or(SOURCE_TYPE_MONITOR);
+        info!(%session_handle, %app_id, requested_types, "SelectSources");
 
-        let target = chooser::choose(source_types).await.map_err(|err| {
+        let target = chooser::choose().await.map_err(|err| {
             error!("chooser failed: {err:#}");
             fdo::Error::Failed(format!("chooser failed: {err}"))
         })?;

@@ -15,22 +15,6 @@ use crate::mutter::Target;
 
 const CACHE_TTL: Duration = Duration::from_secs(10);
 
-/// Mirrors the portal's `SourceType` bitmask: `MONITOR = 1`, `WINDOW = 2`.
-#[derive(Debug, Clone, Copy)]
-pub struct SourceTypes {
-    pub monitor: bool,
-    pub window: bool,
-}
-
-impl SourceTypes {
-    pub fn from_mask(mask: u32) -> Self {
-        Self {
-            monitor: mask & 1 != 0,
-            window: mask & 2 != 0,
-        }
-    }
-}
-
 fn cache_path() -> std::path::PathBuf {
     let runtime_dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".to_string());
     std::path::Path::new(&runtime_dir).join("niri-screencast-portal.cache")
@@ -71,12 +55,20 @@ fn parse_target(s: &str) -> Option<Target> {
 
 /// Runs the chooser (or returns the cached pick) and returns the selected capture target.
 /// Returns `Ok(None)` if the user cancelled the picker.
-pub async fn choose(source_types: SourceTypes) -> Result<Option<Target>> {
+///
+/// Deliberately ignores the caller's requested source types when deciding what to show: Slack
+/// (and presumably other webrtc-based clients) issue a burst of `SelectSources` calls for the
+/// same share attempt with different type masks (monitor-only, then window-only, then both —
+/// see niri-screencast-portal-PLAN.md). The cache is shared across that whole burst, so always
+/// offering the full monitor+window list on the one real prompt is what lets the user actually
+/// pick a window — gating the list by whichever mask happened to arrive first would silently
+/// lock out whatever that first (often most restrictive) probe excluded.
+pub async fn choose() -> Result<Option<Target>> {
     if let Some(cached) = read_cache() {
         return Ok(Some(cached));
     }
 
-    let target = tokio::task::spawn_blocking(move || run_picker(source_types))
+    let target = tokio::task::spawn_blocking(run_picker)
         .await
         .context("chooser task panicked")??;
 
@@ -87,27 +79,23 @@ pub async fn choose(source_types: SourceTypes) -> Result<Option<Target>> {
     Ok(target)
 }
 
-fn run_picker(source_types: SourceTypes) -> Result<Option<Target>> {
+fn run_picker() -> Result<Option<Target>> {
     let mut choices: BTreeMap<String, Target> = BTreeMap::new();
 
-    if source_types.monitor {
-        for (connector, output) in list_outputs()? {
-            if output.logical.is_none() {
-                // Disabled output — nothing to capture.
-                continue;
-            }
-            let label = format!("Screen: {} ({connector})", friendly_output_name(&output));
-            choices.insert(label, Target::Monitor(connector));
+    for (connector, output) in list_outputs()? {
+        if output.logical.is_none() {
+            // Disabled output — nothing to capture.
+            continue;
         }
+        let label = format!("Screen: {} ({connector})", friendly_output_name(&output));
+        choices.insert(label, Target::Monitor(connector));
     }
 
-    if source_types.window {
-        for window in list_windows()? {
-            let app_id = window.app_id.as_deref().unwrap_or("?");
-            let title = window.title.as_deref().unwrap_or("(untitled)");
-            let label = format!("Window [{app_id}]: {title}");
-            choices.insert(label, Target::Window(window.id));
-        }
+    for window in list_windows()? {
+        let app_id = window.app_id.as_deref().unwrap_or("?");
+        let title = window.title.as_deref().unwrap_or("(untitled)");
+        let label = format!("Window [{app_id}]: {title}");
+        choices.insert(label, Target::Window(window.id));
     }
 
     if choices.is_empty() {
